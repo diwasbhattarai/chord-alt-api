@@ -1,0 +1,61 @@
+{
+    "alternates": [
+    {
+    "explanation": "The first reharmonization substitutes the Em chord with an E7. This introduces a dominant 7th chord, which is frequently used in jazz, funk, and RnB styles. The E7 serves to create tension that resolves to the C chord.",
+    "new_passing_chords": [
+    "A7"
+    ],
+    "passing_chord_explanation": "An A7 passing chord is added between the C and D chords to further emphasize the jazz and RnB style, by creating a secondary dominant chord that resolves to the D chord.",
+    "passing_chord_locations": [
+    "C",
+    "D"
+    ],
+    "reharmonized": [
+    "G",
+    "E7",
+    "C",
+    "D"
+    ]
+    },
+    {
+    "explanation": "The second reharmonization features the substitution of the Em chord for a Bm7, creating a ii-V-I progression in the key of C major, which is common in jazz and RnB. The Cmaj7 and D7 chords also emphasize the genre styles with extended chord tones.",
+    "new_passing_chords": [
+    "F#m7b5"
+    ],
+    "passing_chord_explanation": "F#m7b5 is used as a passing chord between Bm7 and Cmaj7 to create a smooth chromatic motion and to navigate through the chords' common tones.",
+    "passing_chord_locations": [
+    "Bm7",
+    "Cmaj7"
+    ],
+    "reharmonized": [
+    "G",
+    "Bm7",
+    "Cmaj7",
+    "D7"
+    ]
+    },
+    {
+    "explanation": "The final reharmonization adds the 7th extension to the existing chords, further emphasizing the jazz, funk, and RnB styles. The C9 chord adds harmonic richness and is commonly used to create a sophisticated sound in the chosen styles.",
+    "new_passing_chords": [
+    "Db7"
+    ],
+    "passing_chord_explanation": "A Db7 passing chord is inserted between the C9 and D7 chords to produce chromatic descending motion that adds intrigue to the progression and fits the given styles.",
+    "passing_chord_locations": [
+    "C9",
+    "D7"
+    ],
+    "reharmonized": [
+    "G",
+    "Em7",
+    "C9",
+    "D7"
+    ]
+    }
+    ],
+    "original_progression": [
+    "G",
+    "Em",
+    "C",
+    "D"
+    ]
+    }

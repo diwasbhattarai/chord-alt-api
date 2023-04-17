@@ -1,0 +1,4 @@
+progression = <progression>
+style = <style>
+include passing chords = <passing>
+number = <number>
