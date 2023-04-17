@@ -19,15 +19,12 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 
-# system_message = open('system_message.txt', 'r').read()
+system_message = open('system_message.txt', 'r').read()
 
-# user_message = open('user_message.txt', 'r').read()
+user_message = open('user_message.txt', 'r').read()
 
-# chords_file = json.loads(open('chord-fingerings.json', 'r').read())
+chords_file = json.loads(open('chord-fingerings.json', 'r').read())
   
-# on the terminal type: curl http://127.0.0.1:5000/
-# returns hello world when we use GET.
-# returns the data that we send when we use POST.
 @app.route('/', methods = ['GET', 'POST'])
 def home():
     if(request.method == 'GET'):
