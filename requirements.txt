@@ -1,1 +1,2 @@
-Flask==1.1.4
+markupsafe==2.0.1
+Flask==2.2.3
