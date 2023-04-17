@@ -9,7 +9,6 @@ import openai
 import re
 import os
 
-# openai.api_key = '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'
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 # creating a Flask app
