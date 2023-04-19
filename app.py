@@ -69,7 +69,7 @@ def disp():
     
     for chord in progression_t: 
         if re.match(r'^[A-G][#]?(m|maj|min|dim|aug|7|maj7|min7|dim7|add9)?$', chord) == None:
-            print('Chord is invalid ', chord)
+            # print('Chord is invalid ', chord)
             save_to_log(request_ip, request_time, progression, False, 'invalid chord '+chord, '')
             return Response('Bad Request', status=400, mimetype='application/json')
     
@@ -105,7 +105,7 @@ def disp():
             ]
         )
         if (response.choices[0].finish_reason == 'stop'):
-            print(response.choices[0]['message']['content'])
+            # print(response.choices[0]['message']['content'])
             # save_to_log(request_ip, request_time, progression, True, '', re.sub(r"[\n\t]*", "", str(response)))
 
             res = json.loads(response.choices[0]['message']['content'])
@@ -168,8 +168,8 @@ def append_chord_fingerings(response):
         # print(k, len(v))
         chord_fingerings[k] = v[0:3]
 
-    for k,v in chord_fingerings.items():
-        print(k, v)
+    # for k,v in chord_fingerings.items():
+    #     print(k, v)
 
     response['chord_fingerings'] = chord_fingerings
 
