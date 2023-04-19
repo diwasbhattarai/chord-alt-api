@@ -35,7 +35,7 @@ def home():
     
 def minify_json(json_data):
     # check if json_data is a string
-    print(type(json_data), json_data)
+    # print(type(json_data), json_data)
     if isinstance(json_data, str):
         json_data = json.loads(json_data)
     return json.dumps((json_data), separators=(',', ':'), indent=None)
