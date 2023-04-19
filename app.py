@@ -32,11 +32,18 @@ def home():
   
         data = "hello world"
         return jsonify({'data': data})
+    
+def minify_json(json_data):
+    # check if json_data is a string
+    print(type(json_data), json_data)
+    if isinstance(json_data, str):
+        json_data = json.loads(json_data)
+    return json.dumps((json_data), separators=(',', ':'), indent=None)
   
 def save_to_log(request_ip, request_time, progression, success, error, response, openai_response={}):
     # with open('./_logs/log.txt', 'a') as f:
         # f.write('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]*", "", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]*", "", str(response)))        
-    print((str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]", " ", str(response)), re.sub(r"[\n\t]", "", str(openai_response))))
+    print((str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + minify_json((response))) + '|' + minify_json((openai_response)))
 
 @app.route('/api/reharmonize', methods = ['GET', 'OPTIONS'])
 def disp():
@@ -76,7 +83,7 @@ def disp():
         res = json.loads(open('response.json', 'r').read())
         # res = res.choices[0]['message']['content']
         res = append_chord_fingerings(res)
-        save_to_log(request_ip, request_time, progression, True, '', re.sub(r"[\n\t]*", "", str(res)))
+        save_to_log(request_ip, request_time, progression, True, '', res)
         return (res)
         # return json.loads(open('response.json', 'r').read()) # return pre-defined response for testing
     
@@ -110,7 +117,7 @@ def disp():
             res = json.loads(response.choices[0]['message']['content'])
             res = append_chord_fingerings(res)
 
-            save_to_log(request_ip, request_time, progression, True, '', re.sub(r"[\n\t]*", "", str(res)), response)
+            save_to_log(request_ip, request_time, progression, True, '', res, response)
             return (res)
         else:
             save_to_log(request_ip, request_time, progression, False, 'API error', 'Error 400: Bad Request')
