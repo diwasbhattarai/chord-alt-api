@@ -33,10 +33,10 @@ def home():
         data = "hello world"
         return jsonify({'data': data})
   
-def save_to_log(request_ip, request_time, progression, success, error, response):
+def save_to_log(request_ip, request_time, progression, success, error, response, openai_response={}):
     # with open('./_logs/log.txt', 'a') as f:
         # f.write('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]*", "", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]*", "", str(response)))        
-    print(('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t].?", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t].?", " ", str(response))))
+    print((str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t].?", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t].?", " ", str(response)), re.sub(r"[\n\t].?", "", str(openai_response))))
 
 @app.route('/api/reharmonize', methods = ['GET', 'OPTIONS'])
 @cross_origin()
@@ -111,7 +111,7 @@ def disp():
             res = json.loads(response.choices[0]['message']['content'])
             res = append_chord_fingerings(res)
 
-            save_to_log(request_ip, request_time, progression, True, '', re.sub(r"[\n\t]*", "", str(res)))
+            save_to_log(request_ip, request_time, progression, True, '', re.sub(r"[\n\t]*", "", str(res)), response)
             return (res)
         else:
             save_to_log(request_ip, request_time, progression, False, 'API error', 'Error 400: Bad Request')
