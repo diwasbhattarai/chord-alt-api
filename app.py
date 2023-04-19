@@ -36,7 +36,7 @@ def home():
 def save_to_log(request_ip, request_time, progression, success, error, response):
     # with open('./_logs/log.txt', 'a') as f:
         # f.write('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]*", "", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]*", "", str(response)))        
-    print(('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]?", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]?", " ", str(response))))
+    print(('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t].?", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t].?", " ", str(response))))
 
 @app.route('/api/reharmonize', methods = ['GET', 'OPTIONS'])
 @cross_origin()
