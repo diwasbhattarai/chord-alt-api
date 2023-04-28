@@ -60,4 +60,4 @@ jobs:
         with:
           app-name: 'Chord-Alt-API'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E73300EB9066462A837096617D1F7614 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D211AE02DBC44C4590D25128C1267604 }}
