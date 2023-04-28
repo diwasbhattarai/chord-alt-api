@@ -50,7 +50,9 @@ def disp():
     progression = request.args.get('progression')
     # print(progression)
 
-    request_ip = request.remote_addr
+    # request_ip = request.remote_addr
+    request_ip = request.environ['REMOTE_ADDR'] if request.environ.get('HTTP_X_FORWARDED_FOR') else request.environ['HTTP_X_FORWARDED_FOR']
+    request_ip = str(request_ip)
     request_time = datetime.now()
     # print(request_time, request_ip, progression)
 
