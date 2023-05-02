@@ -2,6 +2,11 @@
 # import necessary libraries and functions
 from datetime import datetime
 from flask import Flask, jsonify, request, Response
+from celery import Celery
+from celery.result import AsyncResult
+
+import redis
+from redis import StrictRedis
 
 from flask_cors import CORS, cross_origin
 import json
@@ -17,7 +22,17 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+# Configure Celery
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6380/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6380/0'
 
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND'])
+celery.conf.update(app.config)
+
+# Redis connection
+redis_conn = redis.StrictRedis(host='localhost', port=6380, db=0)
+
+datetime_format = "%m/%d/%Y-%H:%M:%S.%f"
 
 
 system_message = open('system_message.txt', 'r').read()
@@ -33,28 +48,101 @@ def home():
         data = "hello world"
         return jsonify({'data': data})
     
+
 def minify_json(json_data):
     # check if json_data is a string
     # print(type(json_data), json_data)
     if isinstance(json_data, str):
-        json_data = json.loads(json_data)
-    return json.dumps((json_data), separators=(',', ':'), indent=None)
+        try:
+            json_data = json.loads(json_data)
+            return json.dumps((json_data), separators=(',', ':'), indent=None)
+        except:
+            return json_data
+    else:
+        return str(json_data)
   
 def save_to_log(request_ip, request_time, progression, success, error, response, openai_response={}):
     # with open('./_logs/log.txt', 'a') as f:
         # f.write('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]*", "", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]*", "", str(response)))        
     print((str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]", " ", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + minify_json((response))) + '|' + minify_json((openai_response)))
 
-@app.route('/api/reharmonize', methods = ['GET', 'OPTIONS'])
-def disp():
-    progression = request.args.get('progression')
+def call_openai_api(system_message, user_message_local):
+    return openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_message_local},
+            ]
+        )
+
+@app.route('/api/task_status/<string:task_id>', methods=['GET', 'OPTIONS'])
+def task_status(task_id):
+    task = AsyncResult(task_id, app=celery)
+    position = -1
+    total_pending_tasks = 0
+
+    redis_conn = StrictRedis.from_url(app.config['CELERY_BROKER_URL'])
+    task_queue_key = 'task_queue'
+    task_queue = redis_conn.lrange(task_queue_key, 0, -1)
+
+    pending_tasks_ahead = 0
+    task_position = -1
+    for i, queued_task_id in enumerate(task_queue):
+        queued_task = AsyncResult(queued_task_id.decode(), app=celery)
+        if queued_task.status == 'PENDING':
+            total_pending_tasks += 1
+
+            if queued_task_id.decode() == task_id:
+                task_position = i
+
+            if task_position == -1:
+                pending_tasks_ahead += 1
+
+    if task_position != -1:
+        position = pending_tasks_ahead
+
+    return jsonify({"task_id": task_id, "status": task.status, "position": (position+1), "total_pending_tasks": total_pending_tasks})
+
+@app.route('/api/task_result/<string:task_id>', methods=['GET', 'OPTIONS'])
+def task_result(task_id):
+    task = AsyncResult(task_id, app=celery)
+    if task.ready():
+        result = task.result
+    else:
+        result = "Task is still running"
+    return jsonify({"task_id": task_id, "result": result})
+
+@app.route('/api/reharmonize', methods = ['GET'])
+def create_task():
+
+    if request.headers.getlist("X-Forwarded-For"):
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip = request.remote_addr
+    
+    r = {
+        'progression': request.args.get('progression'),
+        'request_ip': str(ip),
+        'request_time': datetime.now().strftime(datetime_format),
+    }
+    task = process_chords.apply_async(args=(r,))
+    redis_conn.rpush('task_queue', task.id)  # Add task ID to the Redis list
+    task_id_bytes = task.id.encode()
+    if task_id_bytes in redis_conn.lrange('task_queue', 0, -1):
+        position = redis_conn.lrange('task_queue', 0, -1).index(task_id_bytes)
+    else:
+        position = -1
+    return jsonify({"task_id": task.id, "position": position})
+
+@celery.task(bind=True)
+def process_chords(self, request):
+    progression = request['progression']
     # print(progression)
 
     # request_ip = request.remote_addr
-    request_ip = request.environ['REMOTE_ADDR'] if request.environ.get('HTTP_X_FORWARDED_FOR') else request.environ['HTTP_X_FORWARDED_FOR']
-    request_ip = str(request_ip)
-    request_time = datetime.now()
-    # print(request_time, request_ip, progression)
+    request_ip = (request['request_ip'])
+    request_time = datetime.strptime(request['request_time'], datetime_format)
+    print(request_time, request_ip, progression)
 
 
     # make sure the progression string is not empty
@@ -105,13 +193,8 @@ def disp():
     # return json.loads(open('response.json', 'r').read()) # return pre-defined response for testing
     
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": user_message_local},
-            ]
-        )
+        response = call_openai_api(system_message, user_message_local)
+
         if (response.choices[0].finish_reason == 'stop'):
             # print(response.choices[0]['message']['content'])
             # save_to_log(request_ip, request_time, progression, True, '', re.sub(r"[\n\t]*", "", str(response)))
