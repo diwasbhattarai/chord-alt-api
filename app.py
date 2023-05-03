@@ -43,7 +43,7 @@ redis_conn = redis.StrictRedis(
     ssl=True,
     ssl_cert_reqs=None,
     db=0
-)
+) 
 
 datetime_format = "%m/%d/%Y-%H:%M:%S.%f"
 
