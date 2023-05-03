@@ -24,9 +24,23 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 redis_connection_string = os.environ.get('REDIS_CONNECTION_STRING', '')
-url = urlparse(redis_connection_string)
+parts = redis_connection_string.split(',')
 
-redis_url = f"rediss://{url.username}:{url.password}@{url.hostname}:{url.port}/0"
+# Extract the required information
+hostname = None
+port = None
+password = None
+
+for part in parts:
+    if part.startswith('password='):
+        password = part[len('password='):]
+    elif part.startswith('ssl='):
+        ssl = part[len('ssl='):]
+    elif ':' in part:
+        hostname, port = part.split(':')
+
+# Build the Redis URL with SSL
+redis_url = f"rediss://{password}@{hostname}:{port}/0"
 
 # Configure Celery
 app.config['CELERY_BROKER_URL'] = redis_url
