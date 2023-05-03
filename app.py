@@ -13,6 +13,7 @@ import json
 import openai
 import re
 import os
+from urllib.parse import urlparse
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 
@@ -29,8 +30,20 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6380/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND'])
 celery.conf.update(app.config)
 
+
+redis_connection_string = os.environ.get('REDIS_CONNECTION_STRING', '')
+url = urlparse(redis_connection_string)
+
 # Redis connection
-redis_conn = redis.StrictRedis(host='localhost', port=6380, db=0)
+# redis_conn = redis.StrictRedis(host='localhost', port=6380, db=0)
+redis_conn = redis.StrictRedis(
+    host=url.hostname,
+    port=url.port,
+    password=url.password,
+    ssl=True,
+    ssl_cert_reqs=None,
+    db=0
+)
 
 datetime_format = "%m/%d/%Y-%H:%M:%S.%f"
 
