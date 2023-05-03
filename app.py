@@ -30,12 +30,15 @@ parts = redis_connection_string.split(',')
 hostname = None
 port = None
 password = None
+abortConnect = False
 
 for part in parts:
     if part.startswith('password='):
         password = part[len('password='):]
     elif part.startswith('ssl='):
         ssl = part[len('ssl='):]
+    elif part.startswith('abortConnect='):
+        abortConnect = part[len('abortConnect='):]
     elif ':' in part:
         hostname, port = part.split(':')
 
