@@ -58,9 +58,9 @@ celery.conf.update(app.config)
 # Redis connection
 # redis_conn = redis.StrictRedis(host='localhost', port=6380, db=0)
 redis_conn = redis.StrictRedis(
-    host=url.hostname,
-    port=url.port,
-    password=url.password,
+    host=hostname,
+    port=port,
+    password=password,
     ssl=True,
     ssl_cert_reqs=None,
     db=0
