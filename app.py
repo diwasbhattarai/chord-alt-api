@@ -47,9 +47,9 @@ print(hostname, port, password, abortConnect)
 
 # redis_url = f"rediss://{hostname}:{port}/0?ssl_cert_reqs=CERT_NONE"
 if password:
-    redis_url = f"rediss://:{password}@{hostname}:{port}/0?ssl_cert_reqs=CERT_OPTIONAL"
+    redis_url = f"rediss://:{password}@{hostname}:{port}/0?ssl_cert_reqs=required"
 else:
-    redis_url = f"rediss://{hostname}:{port}/0?ssl_cert_reqs=CERT_OPTIONAL"
+    redis_url = f"rediss://{hostname}:{port}/0?ssl_cert_reqs=required"
 
 # Configure Celery
 app.config['CELERY_BROKER_URL'] = redis_url
