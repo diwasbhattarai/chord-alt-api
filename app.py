@@ -237,7 +237,7 @@ def process_chords(self, request):
             res = json.loads(response.choices[0]['message']['content'])
             res = append_chord_fingerings(res)
 
-            save_to_log(request_ip, request_time, progression, True, '', res, response)
+            save_to_log(request_ip, request_time, progression, True, '', str(res), str(response))
             return (res)
         else:
             save_to_log(request_ip, request_time, progression, False, 'API error', str({}))
