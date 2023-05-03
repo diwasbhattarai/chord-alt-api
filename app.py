@@ -95,7 +95,7 @@ def minify_json(json_data):
             return json_data
     else:
         return str(json_data)
-  
+#   request_ip, request_time, progression, False, 'openai error exception: '+str(e), str({})
 def save_to_log(request_ip, request_time, progression, success, error, response, openai_response={}):
     # with open('./_logs/log.txt', 'a') as f:
         # f.write('\n'+str(request_time) + '|' + request_ip + '|' + progression + '|' + str(success) + '|' + re.sub(r"[\n\t]*", "", error) + '|' + str((datetime.now()-request_time).seconds) + '|' + re.sub(r"[\n\t]*", "", str(response)))        
@@ -182,12 +182,12 @@ def process_chords(self, request):
 
     # make sure the progression string is not empty
     if len(progression) == 2 or progression == None or progression == '':
-        save_to_log(request_ip, request_time, progression, False, 'empty progression', 'Error 400: Bad Request')
+        save_to_log(request_ip, request_time, progression, False, 'empty progression', str({}))
         return Response('Bad Request', status=400, mimetype='application/json')
     
     # ensure that the progression string is of the correct format (eg [Gmaj, Emin, Cmaj, Dmaj])
     if progression[0] != '[' or progression[-1] != ']':
-        save_to_log(request_ip, request_time, progression, False, 'invalid progression format', 'Error 400: Bad Request')
+        save_to_log(request_ip, request_time, progression, False, 'invalid progression format', str({}))
         return Response('Bad Request', status=400, mimetype='application/json')
     
     # extract the chord progression from the request
@@ -195,7 +195,7 @@ def process_chords(self, request):
     progression_t = progression_t.split(', ')
 
     if (len(progression_t) > 5):
-        save_to_log(request_ip, request_time, progression, False, 'progression contains more than 5 chords '+str(len(progression_t)), 'Error 400: Bad Request')
+        save_to_log(request_ip, request_time, progression, False, 'progression contains more than 5 chords '+str(len(progression_t)), str({}))
         return Response('Bad Request', status=400, mimetype='application/json')
     
     for chord in progression_t: 
@@ -240,11 +240,12 @@ def process_chords(self, request):
             save_to_log(request_ip, request_time, progression, True, '', res, response)
             return (res)
         else:
-            save_to_log(request_ip, request_time, progression, False, 'API error', 'Error 400: Bad Request')
+            save_to_log(request_ip, request_time, progression, False, 'API error', str({}))
             return Response('Bad Request', status=400, mimetype='application/json')
     except Exception as e:
         # print(e)
-        save_to_log(request_ip, request_time, progression, False, 'openai error exception: '+str(e), 'Error 400: Bad Request')
+                #   request_ip, request_time, progression, success, error,                            response,              openai_response={}
+        save_to_log(request_ip, request_time, progression, False, 'openai error exception: '+str(e), str({}))
         return Response('Bad Request', status=400, mimetype='application/json')
     
 
@@ -301,9 +302,7 @@ def append_chord_fingerings(response):
 
     return response
     
-    
-  
-# driver function
+
 if __name__ == '__main__':
   
     app.run(debug = True)
