@@ -23,16 +23,20 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+redis_connection_string = os.environ.get('REDIS_CONNECTION_STRING', '')
+url = urlparse(redis_connection_string)
+
+redis_url = f"rediss://{url.username}:{url.password}@{url.hostname}:{url.port}/0"
+
 # Configure Celery
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6380/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6380/0'
+app.config['CELERY_BROKER_URL'] = redis_url
+app.config['CELERY_RESULT_BACKEND'] = redis_url
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'], backend=app.config['CELERY_RESULT_BACKEND'])
 celery.conf.update(app.config)
 
 
-redis_connection_string = os.environ.get('REDIS_CONNECTION_STRING', '')
-url = urlparse(redis_connection_string)
+
 
 # Redis connection
 # redis_conn = redis.StrictRedis(host='localhost', port=6380, db=0)
