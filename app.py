@@ -1,6 +1,7 @@
 # Using flask to make an api
 # import necessary libraries and functions
 from datetime import datetime
+import ssl
 from flask import Flask, jsonify, request, Response
 from celery import Celery
 from celery.result import AsyncResult
@@ -41,9 +42,14 @@ for part in parts:
         abortConnect = part[len('abortConnect='):]
     elif ':' in part:
         hostname, port = part.split(':')
-
+print(hostname, port, password, abortConnect)
 # Build the Redis URL with SSL
-redis_url = f"rediss://{password}@{hostname}:{port}/0"
+
+# redis_url = f"rediss://{hostname}:{port}/0?ssl_cert_reqs=CERT_NONE"
+if password:
+    redis_url = f"rediss://:{password}@{hostname}:{port}/0?ssl_cert_reqs=CERT_NONE"
+else:
+    redis_url = f"rediss://{hostname}:{port}/0?ssl_cert_reqs=CERT_NONE"
 
 # Configure Celery
 app.config['CELERY_BROKER_URL'] = redis_url
@@ -57,14 +63,9 @@ celery.conf.update(app.config)
 
 # Redis connection
 # redis_conn = redis.StrictRedis(host='localhost', port=6380, db=0)
-redis_conn = redis.StrictRedis(
-    host=hostname,
-    port=port,
-    password=password,
-    ssl=True,
-    ssl_cert_reqs=None,
-    db=0
-) 
+print(redis_url)
+redis_conn = redis.StrictRedis.from_url(redis_url)
+
 
 datetime_format = "%m/%d/%Y-%H:%M:%S.%f"
 
