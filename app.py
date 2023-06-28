@@ -109,7 +109,8 @@ def call_openai_api(system_message, user_message_local):
             messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message_local},
-            ]
+            ],
+            request_timeout=60,
         )
 
 @app.route('/api/task_status/<string:task_id>', methods=['GET', 'OPTIONS'])
