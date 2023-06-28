@@ -51,7 +51,9 @@ if password:
 else:
     redis_url = f"rediss://{hostname}:{port}/0?ssl_cert_reqs=required"
 
-# Configure Celery
+# redis_url = 'redis://localhost:6380/0' # for local testing
+
+# Configure Celery 
 app.config['CELERY_BROKER_URL'] = redis_url
 app.config['CELERY_RESULT_BACKEND'] = redis_url
 
@@ -143,6 +145,8 @@ def task_result(task_id):
     task = AsyncResult(task_id, app=celery)
     if task.ready():
         result = task.result
+        if 'error' in result:
+            return Response(result['error'], status=400)
     else:
         result = "Task is still running"
     return jsonify({"task_id": task_id, "result": result})
@@ -162,11 +166,19 @@ def create_task():
     }
     task = process_chords.apply_async(args=(r,))
     redis_conn.rpush('task_queue', task.id)  # Add task ID to the Redis list
-    task_id_bytes = task.id.encode()
-    if task_id_bytes in redis_conn.lrange('task_queue', 0, -1):
-        position = redis_conn.lrange('task_queue', 0, -1).index(task_id_bytes)
-    else:
-        position = -1
+    
+    task_queue = redis_conn.lrange('task_queue', 0, -1)
+    pending_tasks_ahead = 0
+    task_position = -1
+    for i, queued_task_id in enumerate(task_queue):
+        queued_task = AsyncResult(queued_task_id.decode(), app=celery)
+        if queued_task.status == 'PENDING':
+            if queued_task_id.decode() == task.id:
+                task_position = i
+            if task_position == -1:
+                pending_tasks_ahead += 1
+    position = pending_tasks_ahead if task_position != -1 else -1
+
     return jsonify({"task_id": task.id, "position": position})
 
 @celery.task(bind=True)
@@ -183,12 +195,16 @@ def process_chords(self, request):
     # make sure the progression string is not empty
     if len(progression) == 2 or progression == None or progression == '':
         save_to_log(request_ip, request_time, progression, False, 'empty progression', str({}))
-        return Response('Bad Request', status=400, mimetype='application/json')
+        # return Response('Bad Request', status=400, mimetype='application/json')
+        # raise Exception('Empty progression')
+        return {'error': 'Empty progression'}
     
     # ensure that the progression string is of the correct format (eg [Gmaj, Emin, Cmaj, Dmaj])
     if progression[0] != '[' or progression[-1] != ']':
         save_to_log(request_ip, request_time, progression, False, 'invalid progression format', str({}))
-        return Response('Bad Request', status=400, mimetype='application/json')
+        # return Response('Bad Request', status=400, mimetype='application/json')
+        # raise Exception('Invalid progression format')
+        return {'error': 'Invalid progression format'}
     
     # extract the chord progression from the request
     progression_t = progression[1:-1]
@@ -196,13 +212,17 @@ def process_chords(self, request):
 
     if (len(progression_t) > 5):
         save_to_log(request_ip, request_time, progression, False, 'progression contains more than 5 chords '+str(len(progression_t)), str({}))
-        return Response('Bad Request', status=400, mimetype='application/json')
+        # return Response('Bad Request', status=400, mimetype='application/json')
+        # raise Exception('Progression contains more than 5 chords')
+        return {'error': 'Progression contains more than 5 chords'}
     
     for chord in progression_t: 
         if re.match(r'^[A-G][#]?(m|maj|min|dim|aug|7|maj7|min7|dim7|add9)?$', chord) == None:
             # print('Chord is invalid ', chord)
             save_to_log(request_ip, request_time, progression, False, 'invalid chord '+chord, '')
-            return Response('Bad Request', status=400, mimetype='application/json')
+            # return Response('Bad Request', status=400, mimetype='application/json')
+            # raise Exception('Invalid chord')
+            return {'error': 'Invalid chord ' + str(chord)}
     
     if (progression == '[G, Em, C, D]'):
         res = json.loads(open('response.json', 'r').read())
@@ -241,12 +261,16 @@ def process_chords(self, request):
             return (res)
         else:
             save_to_log(request_ip, request_time, progression, False, 'API error', str({}))
-            return Response('Bad Request', status=400, mimetype='application/json')
+            # return Response('Bad Request', status=400, mimetype='application/json')
+            # raise Exception('OpenAI API error')
+            return {'error': 'OpenAI API error'}
     except Exception as e:
         # print(e)
                 #   request_ip, request_time, progression, success, error,                            response,              openai_response={}
         save_to_log(request_ip, request_time, progression, False, 'openai error exception: '+str(e), str({}))
-        return Response('Bad Request', status=400, mimetype='application/json')
+        # return Response('Bad Request', status=400, mimetype='application/json')
+        # raise Exception('OpenAI API error')
+        return {'error': 'OpenAI API error'}
     
 
 def append_chord_fingerings(response):
