@@ -80,10 +80,10 @@ chords_file = json.loads(open('chord-fingerings.json', 'r').read())
   
 @app.route('/', methods = ['GET', 'POST'])
 def home():
-    if(request.method == 'GET'):
-  
-        data = "hello world"
-        return jsonify({'data': data})
+    # if(request.method == 'GET'):
+
+    data = "hello world"
+    return jsonify({'data': data})
     
 
 def minify_json(json_data):
